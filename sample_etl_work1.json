@@ -1,0 +1,23 @@
+{
+  "script_name": "High Complexity RSQL ETL Script Example",
+  "lineage": [
+    {
+      "operation": "COPY",
+      "source_name": "s3://my-bucket/data/",
+      "target_name": "stage_sales_events",
+      "logic": "Load data from S3 into temporary staging table using PARQUET format and manifest file with IAM role authentication."
+    },
+    {
+      "operation": "DELETE",
+      "source_name": "stage_sales_events",
+      "target_name": "sales_events",
+      "logic": "Delete existing records in sales_events that match sales_id from stage_sales_events."
+    },
+    {
+      "operation": "INSERT",
+      "source_name": "stage_sales_events",
+      "target_name": "sales_events",
+      "logic": "Insert new records from stage_sales_events into sales_events."
+    }
+  ]
+}

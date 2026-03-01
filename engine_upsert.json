@@ -1,0 +1,29 @@
+{
+  "script_name": "rsql_etl_upsert_fct_orders_from_s3_manifest",
+  "lineage": [
+    {
+      "operation": "COPY",
+      "source_name": "s3://corp-datalake-prod/raw/erp_system/manifest_${LOAD_DATE}.json",
+      "target_name": "stage_temp (TEMP TABLE like fct_orders)",
+      "logic": "COPY loads PARQUET data into temp staging table stage_temp using MANIFEST file at SRC_BUCKET; IAM_ROLE provided via ${IAM_ROLE}. Stage structure matches target via CREATE TEMP TABLE stage_temp (LIKE fct_orders)."
+    },
+    {
+      "operation": "DELETE",
+      "source_name": "stage_temp (TEMP TABLE)",
+      "target_name": "fct_orders",
+      "logic": "Upsert pre-step: delete from target fct_orders any rows whose composite primary keys match stage_temp. Join predicates use PK columns: fct_orders.${PK_COLUMNS_1} = stage_temp.${PK_COLUMNS_1} AND fct_orders.${PK_COLUMNS_2} = stage_temp.${PK_COLUMNS_2}."
+    },
+    {
+      "operation": "INSERT",
+      "source_name": "stage_temp (TEMP TABLE)",
+      "target_name": "fct_orders",
+      "logic": "Insert new/updated rows into fct_orders by selecting all columns from stage_temp (INSERT INTO fct_orders SELECT * FROM stage_temp)."
+    },
+    {
+      "operation": "INSERT",
+      "source_name": "stage_temp (TEMP TABLE)",
+      "target_name": "dw_metadata.etl_load_log",
+      "logic": "Audit logging: inserts a load log record for table_name='fct_orders', load_start_time='${LOAD_TIMESTAMP}', rows_inserted computed as (SELECT COUNT(*) FROM stage_temp), status='SUCCESS'."
+    }
+  ]
+}

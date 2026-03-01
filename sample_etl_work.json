@@ -1,0 +1,23 @@
+{
+  "script_name": "High Complexity RSQL ETL Script Example",
+  "lineage": [
+    {
+      "operation": "COPY",
+      "source_name": "s3://my-bucket/data/",
+      "target_name": "stage_sales_events",
+      "logic": "Load data from S3 into temporary staging table using PARQUET format and manifest file. IAM role used for access control. Time format set to auto-detect timestamps in data files. Error handling checks if data was loaded successfully by counting rows in the staging table. If no data is loaded, the process is aborted with a rollback and exit command."
+    },
+    {
+      "operation": "DELETE",
+      "source_name": "stage_sales_events",
+      "target_name": "sales_events",
+      "logic": "Delete existing records in the target table that match the sales_id from the staging table. This step is part of the upsert process to ensure no duplicate records exist in the target table."
+    },
+    {
+      "operation": "INSERT",
+      "source_name": "stage_sales_events",
+      "target_name": "sales_events",
+      "logic": "Insert all records from the staging table into the target table. This step completes the upsert process by adding new records to the target table."
+    }
+  ]
+}

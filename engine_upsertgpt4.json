@@ -1,0 +1,23 @@
+{
+  "script_name": "ETL Script for fct_orders",
+  "lineage": [
+    {
+      "operation": "COPY",
+      "source_name": "s3://corp-datalake-prod/raw/erp_system/manifest_${LOAD_DATE}.json",
+      "target_name": "stage_temp",
+      "logic": "COPY data from S3 manifest file to temporary staging table using IAM role and PARQUET format with statistics update enabled."
+    },
+    {
+      "operation": "DELETE",
+      "source_name": "stage_temp",
+      "target_name": "fct_orders",
+      "logic": "DELETE records from target table fct_orders that exist in stage_temp based on primary keys order_id and line_item_id."
+    },
+    {
+      "operation": "INSERT",
+      "source_name": "stage_temp",
+      "target_name": "fct_orders",
+      "logic": "INSERT new or updated records from stage_temp into target table fct_orders."
+    }
+  ]
+}
